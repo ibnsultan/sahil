@@ -3,6 +3,10 @@
 # sahil
 Swahili Programming language based on Python
 
+**Current State:** 
+- deals only with numbers (both integers and decimals numbers)
+- uses a tree structure to do solve simple expressions
+
 ## To DO
 - [X] lexer
 - [x] parser
