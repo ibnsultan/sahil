@@ -2,3 +2,20 @@
 
 # sahil
 Swahili Programming language based on Python
+
+## To DO
+- [X] lexer
+- [x] parser
+- [ ] Interpreter
+- [ ] Variables
+- [ ] Control Structures
+  - [ ] if-else condition
+  - [ ] for and while loop
+  - [ ] Return, Continue and Break
+- [ ] Functions
+  - [ ] User-made functions
+  - [ ] Built-in functions
+- [ ] Strings
+  - [ ] multilines statements
+- [ ] Lists
+- [ ] Run statements and Comments
