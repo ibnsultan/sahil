@@ -10,7 +10,7 @@ Swahili Programming language based on Python
 ## To DO
 - [X] lexer
 - [x] parser
-- [ ] Interpreter
+- [x] Interpreter
 - [ ] Variables
 - [ ] Control Structures
   - [ ] if-else condition
