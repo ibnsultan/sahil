@@ -103,6 +103,7 @@ TT_PLUS     =   'Jum'
 TT_MINUS    =   'Toa'
 TT_MUL      =   'Zid'
 TT_DIV      =   'Gaw'
+TT_POW      =   'Kip'
 TT_LPAREN   =   'LPAREN'
 TT_RPAREN   =   'RPAREN'
 TT_EOF      =   'MWISHO'
@@ -161,6 +162,9 @@ class Lexer:
                 self.advance()
             elif self.current_char == '/':
                 tokens.append(Token(TT_DIV, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '^':
+                tokens.append(Token(TT_POW, pos_start=self.pos))
                 self.advance()
             elif self.current_char == '(':
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
@@ -291,18 +295,11 @@ class Parser:
 
                 #--------------------------------------------#
                                 #parse loop#
-
-    def factor(self):
+    def atom(self):
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_PLUS, TT_MINUS):                 #consider the unary operations
-            res.register(self.advance())
-            factor = res.register(self.factor())
-            if res.error: return res
-            return res.success(UnaryOpNode(tok, factor))
-
-        elif tok.type in (TT_INT, TT_FLOAT):
+        if tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))             #return a successful responce of a numbernode token
 
@@ -319,10 +316,25 @@ class Parser:
                     "Tokeni inayotarajiwa ni ')' : \n"
                 ))
 
-        return res.failure(InvalidSyntaxError(              #if caught a wrong token return this error
+        return res.failure(InvalidSyntaxError(
             tok.pos_start, tok.pos_end,
-            "Tokeni uliyotumia sio NAMBA(Nam) wala sio DESIMALI(Des): \n"
+            "Tokeni inayotarijiwa ni namba, desimali au opersheni ya hisabati"
         ))
+
+    def power(self):
+        return self.bin_op(self.atom, (TT_POW, ), self.factor)
+
+    def factor(self):
+        res = ParseResult()
+        tok = self.current_tok
+
+        if tok.type in (TT_PLUS, TT_MINUS):                 #consider and preced the unary operations
+            res.register(self.advance())
+            factor = res.register(self.factor())
+            if res.error: return res
+            return res.success(UnaryOpNode(tok, factor))
+
+        return self.power()
 
     def term(self):
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
@@ -333,15 +345,17 @@ class Parser:
                                 #parse loop#
                 #--------------------------------------------#
 
-    def bin_op(self, func, ops):
+    def bin_op(self, func_a, ops, func_b=None):
+        if func_b==None:
+            func_b = func_a
         res = ParseResult()
-        left = res.register(func())                           #generic function
+        left = res.register(func_a())                           #generic function
         if res.error: return res
 
         while self.current_tok.type in ops:
             op_tok = self.current_tok
             res.register(self.advance())
-            right = res.register(func())                      #generic function
+            right = res.register(func_b())                      #generic function
             if res.error: return res
             left =BinOpNode(left, op_tok, right)
 
@@ -404,6 +418,10 @@ class Number:
         if isinstance(other, Number):
             return Number(self.value * other.value).set_context(self.context), None
 
+    def powed_by(self, other):                                #Implement power
+        if isinstance(other, Number):
+            return Number(self.value ** other.value).set_context(self.context), None
+
     def dived_by(self, other):                                 #Implement division
         if isinstance(other, Number):
             if other.value == 0:                               #handles number divide by zero
@@ -464,6 +482,8 @@ class Interpreter:
             result, error = left.multed_by(right)
         elif node.op_tok.type == TT_DIV:
             result, error = left.dived_by(right)
+        elif node.op_tok.type == TT_POW:
+            result, error = left.powed_by(right)
 
         if error:
             return res.failure(error)
