@@ -13,7 +13,10 @@ Sahil is an Implementation of BASIC programming language using swahili lexical t
 - [X] lexer
 - [x] parser
 - [x] Interpreter
-- [ ] Variables
+- [x] Variables
+- [ ] Operators
+  - [ ] Logical operators
+  - [ ] Comparison operators
 - [ ] Control Structures
   - [ ] if-else condition
   - [ ] for and while loop
