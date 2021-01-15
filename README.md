@@ -5,7 +5,6 @@ Swahili Programming language written over Python
 Sahil is an Implementation of BASIC programming language using swahili lexical terms, It is a sister language of swap(predecessor)
 
 **Current State:** 
-- deals only with numbers (both integers and decimals numbers)
 - uses a tree structure to do solve simple expressions
 - It supports basic BODMAS operations
 - variable declaration, initiation and redeclaration
