@@ -8,16 +8,19 @@ Sahil is an Implementation of BASIC programming language using swahili lexical t
 - deals only with numbers (both integers and decimals numbers)
 - uses a tree structure to do solve simple expressions
 - It supports basic BODMAS operations
+- variable declaration, initiation and redeclaration
+- The use of operators in expressions
+- The use of boolean expressions
 
-## To DO
+## To DO  : `now dealing with the control structures`
 - [X] lexer
 - [x] parser
 - [x] Interpreter
 - [x] Variables
-- [ ] Operators
-  - [ ] Logical operators
-  - [ ] Comparison operators
-- [ ] Control Structures
+- [x] Operators
+  - [x] Logical operators
+  - [x] Comparison operators
+- [x] Control Structures
   - [ ] if-else condition
   - [ ] for and while loop
   - [ ] Return, Continue and Break
