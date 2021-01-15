@@ -2,7 +2,7 @@
 
 # sahil
 Swahili Programming language written over Python
-Sahil is an Implementation of BASIC programming language using swahili lexical terms, It is a sister language of swap(predecessor)
+Sahil is an Implementation of BASIC programming language using python and swahili lexical terms, It is a sister language of swap(predecessor)
 
 **Current State:** 
 - uses a tree structure to do solve simple expressions
@@ -10,6 +10,7 @@ Sahil is an Implementation of BASIC programming language using swahili lexical t
 - variable declaration, initiation and redeclaration
 - The use of operators in expressions
 - The use of boolean expressions
+- Implement the basic control structure using the conditional statements
 
 ## To DO  : `now dealing with the control structures`
 - [X] lexer
@@ -20,7 +21,7 @@ Sahil is an Implementation of BASIC programming language using swahili lexical t
   - [x] Logical operators
   - [x] Comparison operators
 - [x] Control Structures
-  - [ ] if-else condition
+  - [x] if-else condition
   - [ ] for and while loop
   - [ ] Return, Continue and Break
 - [ ] Functions
@@ -30,3 +31,7 @@ Sahil is an Implementation of BASIC programming language using swahili lexical t
   - [ ] multilines statements
 - [ ] Lists
 - [ ] Run statements and Comments
+
+## INTERFACE
+Sahil uses a CLI interface, as for now only the Read-evaluate-print-loop(**Repl**) mode is supported, 
+Repl enable you to interactively execute sahil's code line by line without requiring to write a entire script file
