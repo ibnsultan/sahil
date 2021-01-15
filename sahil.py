@@ -123,7 +123,11 @@ KEYWORDS = [
 	'HIFADHI',
 	'NA',
 	'AU',
-	'SIO'
+	'SIO',
+	'KAMA',
+	'BASI',
+	'VINGINEVYO',
+	'ZAIDI'
 ]
 
 class Token:
@@ -339,6 +343,14 @@ class UnaryOpNode:
 	def __repr__(self):
 		return f'({self.op_tok}, {self.node})'
 
+class IfNode:
+	def __init__(self, cases, else_case):
+		self.cases = cases
+		self.else_case = else_case
+
+		self.pos_start = self.cases[0][0].pos_start
+		self.pos_end = (self.else_case or self.cases[len(self.cases) - 1][0]).pos_end
+
 #########################################################################
 #                             PARSE RESULT                              #
 ######################################################################### 
@@ -397,6 +409,66 @@ class Parser:
                 #--------------------------------------------#
                                 #parse loop#
 
+	def if_expr(self):										#the IF, THEN, ELIF and ELSE controls parser
+		res = ParseResult()
+		cases = []
+		else_case = None
+
+		if not self.current_tok.matches(TT_KEYWORD, 'KAMA'):
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Tokeni inayotarajiwa ni neno 'KAMA'"
+			))
+
+		res.register_advancement()
+		self.advance()
+
+		condition = res.register(self.expr())
+		if res.error: return res
+
+		if not self.current_tok.matches(TT_KEYWORD, 'BASI'):
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Tokeni inayotarajiwa ni neno 'BASI'"
+			))
+
+		res.register_advancement()
+		self.advance()
+
+		expr = res.register(self.expr())
+		if res.error: return res
+		cases.append((condition, expr))
+
+		while self.current_tok.matches(TT_KEYWORD, 'VINGINEVYO'):
+			res.register_advancement()
+			self.advance()
+
+			condition = res.register(self.expr())
+			if res.error: return res
+
+			if not self.current_tok.matches(TT_KEYWORD, 'BASI'):
+				return res.failure(InvalidSyntaxError(
+					self.current_tok.pos_start, self.current_tok.pos_end,
+					f"Tokeni inayotarajiwa ni neno 'BASI'"
+				))
+
+			res.register_advancement()
+			self.advance()
+
+			expr = res.register(self.expr())
+			if res.error: return res
+			cases.append((condition, expr))
+
+		if self.current_tok.matches(TT_KEYWORD, 'ZAIDI'):
+			res.register_advancement()
+			self.advance()
+
+			else_case = res.register(self.expr())
+			if res.error: return res
+
+		return res.success(IfNode(cases, else_case))
+
+
 	def atom(self):
 		res = ParseResult()
 		tok = self.current_tok
@@ -425,6 +497,11 @@ class Parser:
 					self.current_tok.pos_start, self.current_tok.pos_end,
 					"Tokeni inayotarajiwa ni ')' : \n "
 				))
+
+		elif tok.matches(TT_KEYWORD, 'KAMA'):
+			if_expr = res.register(self.if_expr())
+			if res.error: return res
+			return res.success(if_expr)
 
 		return res.failure(InvalidSyntaxError(
 			tok.pos_start, tok.pos_end,
@@ -648,6 +725,9 @@ class Number:
 		copy.set_pos(self.pos_start, self.pos_end)
 		copy.set_context(self.context)
 		return copy
+
+	def is_true(self):											#6
+		return self.value != 0
 	
 	def __repr__(self):
 		return str(self.value)
@@ -785,6 +865,25 @@ class Interpreter:
 		else:
 			return res.success(number.set_pos(node.pos_start, node.pos_end))
 
+	def visit_IfNode(self, node, context):
+		res = RTResult()
+
+		for condition, expr in node.cases:
+			condition_value = res.register(self.visit(condition, context))
+			if res.error: return res
+
+			if condition_value.is_true():
+				expr_value = res.register(self.visit(expr, context))
+				if res.error: return res
+				return res.success(expr_value)
+
+		if node.else_case:
+			else_value = res.register(self.visit(node.else_case, context))
+			if res.error: return res
+			return res.success(else_value)
+
+		return res.success(None)
+
               #defining a visit method for each node type#
     #---------------------------------------------------------------#
 
@@ -829,3 +928,5 @@ def run(fn, text):
 #4 - if it is not there is no error but it is also not the end of file
 
 #5 - when tupu is used it returns 0
+
+#6 - gets a boolean value and is then used with the IF control structure
