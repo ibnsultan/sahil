@@ -11,6 +11,7 @@ Sahil is an Implementation of BASIC programming language using python and swahil
 - The use of operators in expressions
 - The use of boolean expressions
 - Implement the basic control structure using the conditional and iteration statements
+- Functions declaration and function calls 
 
 ## To DO  : `now dealing with the functions`
 - [X] lexer
@@ -20,15 +21,15 @@ Sahil is an Implementation of BASIC programming language using python and swahil
 - [x] Operators
   - [x] Logical operators
   - [x] Comparison operators
-- [x] Control Structures
+- [ ] Control Structures
   - [x] if-else condition
   - [x] for and while loop
   - [ ] Return, Continue and Break
 - [ ] Functions
-  - [ ] User-made functions
+  - [x] User-made functions
   - [ ] Built-in functions
 - [ ] Strings
-  - [ ] multilines statements
+- [ ] multilines statements
 - [ ] Lists
 - [ ] Run statements and Comments
 
