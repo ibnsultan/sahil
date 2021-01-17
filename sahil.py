@@ -102,8 +102,9 @@ class Position:
 
 TT_INT          =   'Nam'
 TT_FLOAT        =   'Des'
-TT_IDENTIFIER   =   'kitambuzi'
-TT_KEYWORD      =   'neno'
+TT_STRING		=	'Uzi'
+TT_IDENTIFIER   =   'kitambulishi'			
+TT_KEYWORD      =   'NENO'
 TT_PLUS         =   'Jum'
 TT_MINUS        =   'Toa'
 TT_MUL          =   'Zid'
@@ -178,12 +179,14 @@ class Lexer:
 		tokens = []
 
 		while self.current_char != None:
-			if self.current_char in ' \t':								#ignore tab and spaces
+			if self.current_char in ' \t':					#ignore tab and spaces
 				self.advance()
 			elif self.current_char in DIGITS:
 				tokens.append(self.make_number())
 			elif self.current_char in LETTERS:
 				tokens.append(self.make_identifier())
+			elif self.current_char == '"':
+				tokens.append(self.make_string())
 			elif self.current_char == '+':
 				tokens.append(Token(TT_PLUS, pos_start=self.pos))
 				self.advance()
@@ -205,9 +208,9 @@ class Lexer:
 				tokens.append(Token(TT_RPAREN, pos_start=self.pos))
 				self.advance()
 			elif self.current_char == '!':
-				tok, error = self.make_not_equals()
-				if error : return [], error
-				tokens.append(tok)
+				token, error = self.make_not_equals()
+				if error: return [], error
+				tokens.append(token)
 			elif self.current_char == '=':
 				tokens.append(self.make_equals())
 			elif self.current_char == '<':
@@ -226,9 +229,9 @@ class Lexer:
 		tokens.append(Token(TT_EOF, pos_start=self.pos))
 		return tokens, None
 
-	def make_number(self):
-		num_str = ''							#keeping track of integers
-		dot_count = 0							#keeping track of decimals
+	def make_number(self):									#the factory of the number Tokens
+		num_str = ''										#keeping track of integers
+		dot_count = 0										#keeping track of decimals
 		pos_start = self.pos.copy()
 
 		while self.current_char != None and self.current_char in DIGITS + '.':
@@ -238,10 +241,35 @@ class Lexer:
 			num_str += self.current_char
 			self.advance()
 
-		if dot_count == 0:						#dtermine wether a number is a float or decimal
+		if dot_count == 0:									#determine if a number is a float/decimal
 			return Token(TT_INT, int(num_str), pos_start, self.pos)
 		else:
 			return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+
+	def make_string(self):
+		string = ''
+		pos_start = self.pos.copy()
+		escape_character = False
+		self.advance()
+
+		escape_characters = {
+			'n': '\n',
+			't': '\t'
+		}
+
+		while self.current_char != None and (self.current_char != '"' or escape_character):	#we'll have to review the logic again
+			if escape_character:
+				string += escape_characters.get(self.current_char, self.current_char)
+			else:
+				if self.current_char == '\\':
+					escape_character = True
+				else:
+					string += self.current_char
+			self.advance()
+			escape_character = False
+		
+		self.advance()
+		return Token(TT_STRING, string, pos_start, self.pos)
 
 	def make_identifier(self):
 		id_str = ''
@@ -255,7 +283,7 @@ class Lexer:
 		return Token(tok_type, id_str, pos_start, self.pos)
 
 	def make_minus_or_arrow(self):
-		tok_type = TT_MINUS						
+		tok_type = TT_MINUS
 		pos_start = self.pos.copy()
 		self.advance()
 
@@ -264,7 +292,6 @@ class Lexer:
 			tok_type = TT_ARROW
 
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
 
 	def make_not_equals(self):
 		pos_start = self.pos.copy()
@@ -276,9 +303,9 @@ class Lexer:
 
 		self.advance()
 		return None, ExpectedCharError(pos_start, self.pos, "'=' (baada ya '!')")
-
+	
 	def make_equals(self):
-		tok_type = TT_EQ						
+		tok_type = TT_EQ
 		pos_start = self.pos.copy()
 		self.advance()
 
@@ -289,7 +316,7 @@ class Lexer:
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
 	def make_less_than(self):
-		tok_type = TT_LT						
+		tok_type = TT_LT
 		pos_start = self.pos.copy()
 		self.advance()
 
@@ -300,7 +327,7 @@ class Lexer:
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
 	def make_greater_than(self):
-		tok_type = TT_GT						
+		tok_type = TT_GT
 		pos_start = self.pos.copy()
 		self.advance()
 
@@ -315,6 +342,16 @@ class Lexer:
 #########################################################################
 
 class NumberNode:
+	def __init__(self, tok):
+		self.tok = tok
+
+		self.pos_start = self.tok.pos_start
+		self.pos_end = self.tok.pos_end
+
+	def __repr__(self):
+		return f'{self.tok}'
+
+class StringNode:
 	def __init__(self, tok):
 		self.tok = tok
 
@@ -684,6 +721,11 @@ class Parser:
 			res.register_advancement()
 			self.advance()
 			return res.success(NumberNode(tok))					#return a successful responce of a numbernode token
+
+		elif tok.type == TT_STRING:
+			res.register_advancement()
+			self.advance()
+			return res.success(StringNode(tok))
 
 		elif tok.type == TT_IDENTIFIER:							#this deals with expressions assigned to a variable
 			res.register_advancement()
@@ -1122,10 +1164,39 @@ class Number(Value):
 	def __repr__(self):
 		return str(self.value)
 
+class String(Value):
+	def __init__(self, value):
+		super().__init__()
+		self.value = value
+
+	def added_to(self, other):
+		if isinstance(other, String):
+			return String(self.value + other.value).set_context(self.context), None
+		else:
+			return None, Value.illegal_operation(self, other)
+
+	def multed_by(self, other):
+		if isinstance(other, Number):
+			return String(self.value * other.value).set_context(self.context), None
+		else:
+			return None, Value.illegal_operation(self, other)
+
+	def is_true(self):
+		return len(self.value) > 0
+
+	def copy(self):
+		copy = String(self.value)
+		copy.set_pos(self.pos_start, self.pos_end)
+		copy.set_context(self.context)
+		return copy
+
+	def __repr__(self):
+		return f'"{self.value}"'
+
 class Function(Value):
 	def __init__(self, name, body_node, arg_names):
 		super().__init__()
-		self.name = name or "<njia isojlikana>"
+		self.name = name or "<njia isojulikana>"
 		self.body_node = body_node
 		self.arg_names = arg_names
 
@@ -1219,6 +1290,11 @@ class Interpreter:
 	def visit_NumberNode(self, node, context):
 		return RTResult().success(
 			Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+		)
+
+	def visit_StringNode(self, node, context):
+		return RTResult().success(
+			String(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
 		)
 
 	def visit_VarAccessNode(self, node, context):
